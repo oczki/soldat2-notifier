@@ -42,18 +42,56 @@ class CountData {
   }
 }
 
+class GuiName {
+  __New() {
+    this.counterPub := 'counterPub'
+    this.counterQueue := 'counterQueue'
+    this.counterMatch := 'counterMatch'
+  }
+}
+
+class SoundName {
+  __New() {
+    this.names := [
+      'beeps',
+      'bells',
+      'movie',
+      'retro',
+      'success'
+    ]
+  }
+
+  get(index) {
+    return 'sfx/' . this.names[index] . '.wav'
+  }
+}
+
 class GuiWindow {
   __New() {
+    this.countdownTimer := 0
+    this.countdownTimerMax := 10
     this.gui := this.__create()
     this.show()
   }
 
   update(count) {
-    MsgBox(count.inPubs . ' ' . count.inQueues . ' ' . count.inMatches)
+    this.gui[GuiName().counterPub].Value := count.inPubs
+    this.gui[GuiName().counterQueue].Value := count.inQueues
+    this.gui[GuiName().counterMatch].Value := count.inMatches
+    if (this.countdownTimer > 0)
+      this.countdownTimer--
+    if (count.inQueues > 0 and this.countdownTimer <= 0 and not WinActive("ahk_exe soldat2.exe")) {
+      SoundPlay(SoundName().get(4))
+      this.countdownTimer := this.countdownTimerMax
+    }
+    if (count.inPubs > 0 and this.countdownTimer <= 0 and not WinActive("ahk_exe soldat2.exe")) {
+      SoundPlay(SoundName().get(1))
+      this.countdownTimer := this.countdownTimerMax
+    }
   }
 
   show() {
-    this.gui.Show('W600 H400')
+    this.gui.Show('w600 h400')
   }
 
   __exit() {
@@ -63,6 +101,10 @@ class GuiWindow {
   __create() {
     myGui := Gui(, 'S2 Notifier')
     myGui.OnEvent('Close', this.__exit)
+
+    myGui.Add('Text', 'v' . GuiName().counterPub . ' w150', '0')
+    myGui.Add('Text', 'v' . GuiName().counterQueue . ' w150', '0')
+    myGui.Add('Text', 'v' . GuiName().counterMatch . ' w150', '0')
 
     return myGui
   }
