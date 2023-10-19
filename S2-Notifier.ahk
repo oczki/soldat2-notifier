@@ -47,6 +47,8 @@ class GuiName {
     this.counterPub := 'counterPub'
     this.counterQueue := 'counterQueue'
     this.counterMatch := 'counterMatch'
+
+    this.checkboxPub := 'checkboxPubEnabled'
   }
 }
 
@@ -66,10 +68,68 @@ class SoundName {
   }
 }
 
+class ActivityNotifier {
+  __New() {
+    this.enableForPubs := 0 ; TODO: read from setting
+    this.enabledForQueues := 0 ; TODO: read from setting
+    this.enableForMatches := 0 ; TODO: read from setting
+
+    this.countdownTimer := 0 ; TODO: read from setting
+    this.countdownTimerMax := 10 ; TODO: read from setting
+  }
+
+  update(count) {
+    if (this.countdownTimer > 0) {
+      this.countdownTimer--
+    }
+    if (this.countdownTimer <= 0 and not this.__isSoldat2WindowActive()) {
+      this.countdownTimer := this.countdownTimerMax
+      this.__tickForMatches(count.inMatches)
+      this.__tickForQueues(count.inQueues)
+      this.__tickForPubs(count.inPubs)
+    }
+  }
+
+  __tickForPubs(countInPubs) {
+    if (this.__shouldNotifyForPubs(countInPubs)) {
+      SoundPlay(SoundName().get(1), true) ; TODO: extract to allow previewing
+    }
+  }
+
+  __tickForQueues(countInQueues) {
+    if (this.__shouldNotifyForQueues(countInQueues)) {
+      SoundPlay(SoundName().get(4), true) ; TODO: extract to allow previewing
+    }
+  }
+
+  __tickForMatches(countInMatches) {
+    if (this.__shouldNotifyForMatches(countInMatches)) {
+      SoundPlay(SoundName().get(5), true) ; TODO: extract to allow previewing
+    }
+  }
+
+  __shouldNotifyForPubs(countInPubs) {
+    hasEnoughPlayers := countInPubs >= 1 ; TODO: use setting instead of hardcoded 1
+    return hasEnoughPlayers
+  }
+
+  __shouldNotifyForQueues(countInQueues) {
+    hasEnoughPlayers := countInQueues >= 1 ; TODO: use setting instead of hardcoded 1
+    return hasEnoughPlayers
+  }
+
+  __shouldNotifyForMatches(countInMatches) {
+    hasEnoughPlayers := countInMatches >= 1 ; TODO: use setting instead of hardcoded 1
+    return hasEnoughPlayers
+  }
+
+  __isSoldat2WindowActive() {
+    return WinActive("ahk_exe soldat2.exe")
+  }
+}
+
 class GuiWindow {
   __New() {
-    this.countdownTimer := 0
-    this.countdownTimerMax := 10
     this.gui := this.__create()
     this.show()
   }
@@ -78,16 +138,6 @@ class GuiWindow {
     this.gui[GuiName().counterPub].Value := count.inPubs
     this.gui[GuiName().counterQueue].Value := count.inQueues
     this.gui[GuiName().counterMatch].Value := count.inMatches
-    if (this.countdownTimer > 0)
-      this.countdownTimer--
-    if (count.inQueues > 0 and this.countdownTimer <= 0 and not WinActive("ahk_exe soldat2.exe")) {
-      SoundPlay(SoundName().get(4))
-      this.countdownTimer := this.countdownTimerMax
-    }
-    if (count.inPubs > 0 and this.countdownTimer <= 0 and not WinActive("ahk_exe soldat2.exe")) {
-      SoundPlay(SoundName().get(1))
-      this.countdownTimer := this.countdownTimerMax
-    }
   }
 
   show() {
@@ -105,27 +155,27 @@ class GuiWindow {
     myGui.Add('Text', 'v' . GuiName().counterPub . ' w150', '0')
     myGui.Add('Text', 'v' . GuiName().counterQueue . ' w150', '0')
     myGui.Add('Text', 'v' . GuiName().counterMatch . ' w150', '0')
+    isCheckboxChecked := 0 ; TODO: read from setting
+    myGui.Add('Checkbox', 'v' . GuiName().checkboxPub . ' Checked' . isCheckboxChecked, 'Notify of activity on public servers')
 
     return myGui
   }
 }
 
-notifyIfNeeded(count) {
-}
-
-periodicCheck(count, myGui) {
+periodicCheck(count, myGui, notifier) {
   count.update()
   myGui.update(count)
-  notifyIfNeeded(count)
+  notifier.update(count)
 
-  selfCall := periodicCheck.Bind(count, myGui)
+  selfCall := periodicCheck.Bind(count, myGui, notifier)
   SetTimer(selfCall, -60000) ; Run self every minute
 }
 
 main() {
   count := CountData()
   myGui := GuiWindow()
-  periodicCheck(count, myGui)
+  notifier := ActivityNotifier()
+  periodicCheck(count, myGui, notifier)
 }
 
 main()
