@@ -129,23 +129,29 @@ class ActivityNotifier {
 }
 
 class GuiWindow {
-  __New() {
-    this.gui := this.__create()
+  __New(config) {
+    this.config := config
+    this.myGui := this.__create()
     this.show()
   }
 
   update(count) {
-    this.gui[GuiName().counterPub].Value := count.inPubs
-    this.gui[GuiName().counterQueue].Value := count.inQueues
-    this.gui[GuiName().counterMatch].Value := count.inMatches
+    this.myGui[GuiName().counterPub].Value := count.inPubs
+    this.myGui[GuiName().counterQueue].Value := count.inQueues
+    this.myGui[GuiName().counterMatch].Value := count.inMatches
   }
 
   show() {
-    this.gui.Show('w600 h400')
+    this.myGui.Show('w600 h400')
   }
 
   __exit() {
     ExitApp()
+  }
+
+  __checkboxPubChanged(*) {
+    checked := this.myGui[GuiName().checkboxPub].Value
+    this.config.notifyOfPubs := checked
   }
 
   __create() {
@@ -155,10 +161,94 @@ class GuiWindow {
     myGui.Add('Text', 'v' . GuiName().counterPub . ' w150', '0')
     myGui.Add('Text', 'v' . GuiName().counterQueue . ' w150', '0')
     myGui.Add('Text', 'v' . GuiName().counterMatch . ' w150', '0')
-    isCheckboxChecked := 0 ; TODO: read from setting
-    myGui.Add('Checkbox', 'v' . GuiName().checkboxPub . ' Checked' . isCheckboxChecked, 'Notify of activity on public servers')
+    checkboxPub := myGui.Add('Checkbox', 'v' . GuiName().checkboxPub . ' Checked' . this.config.notifyOfPubs, 'Notify of activity on public servers')
+    checkboxPub.OnEvent('Click', this.__checkboxPubChanged.Bind(this))
 
     return myGui
+  }
+}
+
+class ConfigFile {
+  __New() {
+    this.__fileDirectory := 'config'
+    this.__fileName := this.__fileDirectory . '/config.ini'
+
+    this.__sectionGeneral := 'General'
+    this.__sectionPub := 'PublicServers'
+    this.__sectionQueue := 'RankedQueues'
+    this.__sectionMatch := 'RankedMatches'
+
+    this.__keyMinutesBetweenNotifications := 'MinutesBetweenNotifications'
+    this.__keyFeatureEnabled := 'EnableNotifications'
+    this.__keyMinimumPlayers := 'MinimumPlayersToNotify'
+
+    if (not this.__configDirectoryExists()) {
+      this.__createConfigDirectory()
+    }
+    if (not this.__configFileExists()) {
+      this.__createConfigFile()
+    }
+  }
+
+  minutesBetweenNotifications {
+    get => IniRead(this.__fileName, this.__sectionGeneral, this.__keyMinutesBetweenNotifications, 10)
+    set => IniWrite(value, this.__fileName, this.__sectionGeneral, this.__keyMinutesBetweenNotifications)
+  }
+
+  notifyOfPubs {
+    get => IniRead(this.__fileName, this.__sectionPub, this.__keyFeatureEnabled, 0)
+    set => IniWrite(value, this.__fileName, this.__sectionPub, this.__keyFeatureEnabled)
+  }
+
+  notifyOfQueues {
+    get => IniRead(this.__fileName, this.__sectionQueue, this.__keyFeatureEnabled, 0)
+    set => IniWrite(value, this.__fileName, this.__sectionQueue, this.__keyFeatureEnabled)
+  }
+
+  notifyOfMatches {
+    get => IniRead(this.__fileName, this.__sectionMatch, this.__keyFeatureEnabled, 0)
+    set => IniWrite(value, this.__fileName, this.__sectionMatch, this.__keyFeatureEnabled)
+  }
+
+  minPlayersInPubs {
+    get => IniRead(this.__fileName, this.__sectionPub, this.__keyMinimumPlayers, 1)
+    set => IniWrite(value, this.__fileName, this.__sectionPub, this.__keyMinimumPlayers)
+  }
+
+  minPlayersInQueues {
+    get => IniRead(this.__fileName, this.__sectionQueue, this.__keyMinimumPlayers, 1)
+    set => IniWrite(value, this.__fileName, this.__sectionQueue, this.__keyMinimumPlayers)
+  }
+
+  minPlayersInMatches {
+    get => IniRead(this.__fileName, this.__sectionMatch, this.__keyMinimumPlayers, 1)
+    set => IniWrite(value, this.__fileName, this.__sectionMatch, this.__keyMinimumPlayers)
+  }
+
+  __configDirectoryExists() {
+    return DirExist(this.__fileDirectory)
+  }
+
+  __configFileExists() {
+    return FileExist(this.__fileName)
+  }
+
+  __createConfigDirectory() {
+    DirCreate(this.__fileDirectory)
+  }
+
+  __createConfigFile() {
+    FileAppend('', this.__fileName)
+
+    this.minutesBetweenNotifications := 10
+
+    this.notifyOfPubs := false
+    this.notifyOfQueues := false
+    this.notifyOfMatches := false
+
+    this.minPlayersInPubs := 1
+    this.minPlayersInQueues := 1
+    this.minPlayersInMatches := 1
   }
 }
 
@@ -172,8 +262,9 @@ periodicCheck(count, myGui, notifier) {
 }
 
 main() {
+  config := ConfigFile()
   count := CountData()
-  myGui := GuiWindow()
+  myGui := GuiWindow(config)
   notifier := ActivityNotifier()
   periodicCheck(count, myGui, notifier)
 }
