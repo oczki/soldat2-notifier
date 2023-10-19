@@ -49,6 +49,8 @@ class GuiName {
     this.counterMatch := 'counterMatch'
 
     this.checkboxPub := 'checkboxPubEnabled'
+    this.checkboxQueue := 'checkboxQueueEnabled'
+    this.checkboxMatch := 'checkboxMatchEnabled'
   }
 }
 
@@ -154,6 +156,16 @@ class GuiWindow {
     this.config.notifyOfPubs := checked
   }
 
+  __checkboxQueueChanged(*) {
+    checked := this.myGui[GuiName().checkboxQueue].Value
+    this.config.notifyOfQueues := checked
+  }
+
+  __checkboxMatchChanged(*) {
+    checked := this.myGui[GuiName().checkboxMatch].Value
+    this.config.notifyOfMatches := checked
+  }
+
   __create() {
     myGui := Gui(, 'S2 Notifier')
     myGui.OnEvent('Close', this.__exit)
@@ -161,8 +173,18 @@ class GuiWindow {
     myGui.Add('Text', 'v' . GuiName().counterPub . ' w150', '0')
     myGui.Add('Text', 'v' . GuiName().counterQueue . ' w150', '0')
     myGui.Add('Text', 'v' . GuiName().counterMatch . ' w150', '0')
-    checkboxPub := myGui.Add('Checkbox', 'v' . GuiName().checkboxPub . ' Checked' . this.config.notifyOfPubs, 'Notify of activity on public servers')
+    checkboxPub := myGui.Add('Checkbox',
+      'v' . GuiName().checkboxPub . ' Checked' . this.config.notifyOfPubs,
+      'Notify of activity in public servers')
     checkboxPub.OnEvent('Click', this.__checkboxPubChanged.Bind(this))
+    checkboxQueue := myGui.Add('Checkbox',
+      'v' . GuiName().checkboxQueue . ' Checked' . this.config.notifyOfQueues,
+      'Notify of activity in ranked queues')
+    checkboxQueue.OnEvent('Click', this.__checkboxQueueChanged.Bind(this))
+    checkboxMatch := myGui.Add('Checkbox',
+      'v' . GuiName().checkboxMatch . ' Checked' . this.config.notifyOfMatches,
+      'Notify of activity in ranked matches')
+    checkboxMatch.OnEvent('Click', this.__checkboxMatchChanged.Bind(this))
 
     return myGui
   }
@@ -191,38 +213,52 @@ class ConfigFile {
   }
 
   minutesBetweenNotifications {
-    get => IniRead(this.__fileName, this.__sectionGeneral, this.__keyMinutesBetweenNotifications, 10)
-    set => IniWrite(value, this.__fileName, this.__sectionGeneral, this.__keyMinutesBetweenNotifications)
+    get => IniRead(this.__fileName,
+      this.__sectionGeneral, this.__keyMinutesBetweenNotifications, 10)
+    set => IniWrite(value, this.__fileName,
+      this.__sectionGeneral, this.__keyMinutesBetweenNotifications)
   }
 
   notifyOfPubs {
-    get => IniRead(this.__fileName, this.__sectionPub, this.__keyFeatureEnabled, 0)
-    set => IniWrite(value, this.__fileName, this.__sectionPub, this.__keyFeatureEnabled)
+    get => IniRead(this.__fileName,
+      this.__sectionPub, this.__keyFeatureEnabled, 0)
+    set => IniWrite(value, this.__fileName,
+      this.__sectionPub, this.__keyFeatureEnabled)
   }
 
   notifyOfQueues {
-    get => IniRead(this.__fileName, this.__sectionQueue, this.__keyFeatureEnabled, 0)
-    set => IniWrite(value, this.__fileName, this.__sectionQueue, this.__keyFeatureEnabled)
+    get => IniRead(this.__fileName,
+      this.__sectionQueue, this.__keyFeatureEnabled, 0)
+    set => IniWrite(value, this.__fileName,
+      this.__sectionQueue, this.__keyFeatureEnabled)
   }
 
   notifyOfMatches {
-    get => IniRead(this.__fileName, this.__sectionMatch, this.__keyFeatureEnabled, 0)
-    set => IniWrite(value, this.__fileName, this.__sectionMatch, this.__keyFeatureEnabled)
+    get => IniRead(this.__fileName,
+      this.__sectionMatch, this.__keyFeatureEnabled, 0)
+    set => IniWrite(value, this.__fileName,
+      this.__sectionMatch, this.__keyFeatureEnabled)
   }
 
   minPlayersInPubs {
-    get => IniRead(this.__fileName, this.__sectionPub, this.__keyMinimumPlayers, 1)
-    set => IniWrite(value, this.__fileName, this.__sectionPub, this.__keyMinimumPlayers)
+    get => IniRead(this.__fileName,
+      this.__sectionPub, this.__keyMinimumPlayers, 1)
+    set => IniWrite(value, this.__fileName,
+      this.__sectionPub, this.__keyMinimumPlayers)
   }
 
   minPlayersInQueues {
-    get => IniRead(this.__fileName, this.__sectionQueue, this.__keyMinimumPlayers, 1)
-    set => IniWrite(value, this.__fileName, this.__sectionQueue, this.__keyMinimumPlayers)
+    get => IniRead(this.__fileName,
+      this.__sectionQueue, this.__keyMinimumPlayers, 1)
+    set => IniWrite(value, this.__fileName,
+      this.__sectionQueue, this.__keyMinimumPlayers)
   }
 
   minPlayersInMatches {
-    get => IniRead(this.__fileName, this.__sectionMatch, this.__keyMinimumPlayers, 1)
-    set => IniWrite(value, this.__fileName, this.__sectionMatch, this.__keyMinimumPlayers)
+    get => IniRead(this.__fileName,
+      this.__sectionMatch, this.__keyMinimumPlayers, 1)
+    set => IniWrite(value, this.__fileName,
+      this.__sectionMatch, this.__keyMinimumPlayers)
   }
 
   __configDirectoryExists() {
