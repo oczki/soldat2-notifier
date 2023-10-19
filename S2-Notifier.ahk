@@ -71,11 +71,8 @@ class SoundName {
 }
 
 class ActivityNotifier {
-  __New() {
-    this.enableForPubs := 0 ; TODO: read from setting
-    this.enabledForQueues := 0 ; TODO: read from setting
-    this.enableForMatches := 0 ; TODO: read from setting
-
+  __New(config) {
+    this.config := config
     this.countdownTimer := 0 ; TODO: read from setting
     this.countdownTimerMax := 10 ; TODO: read from setting
   }
@@ -111,18 +108,21 @@ class ActivityNotifier {
   }
 
   __shouldNotifyForPubs(countInPubs) {
-    hasEnoughPlayers := countInPubs >= 1 ; TODO: use setting instead of hardcoded 1
-    return hasEnoughPlayers
+    hasEnoughPlayers := countInPubs >= this.config.minPlayersInPubs
+    shouldNotify := this.config.notifyOfPubs
+    return hasEnoughPlayers and shouldNotify
   }
 
   __shouldNotifyForQueues(countInQueues) {
-    hasEnoughPlayers := countInQueues >= 1 ; TODO: use setting instead of hardcoded 1
-    return hasEnoughPlayers
+    hasEnoughPlayers := countInQueues >= this.config.minPlayersInQueues
+    shouldNotify := this.config.notifyOfQueues
+    return hasEnoughPlayers and shouldNotify
   }
 
   __shouldNotifyForMatches(countInMatches) {
-    hasEnoughPlayers := countInMatches >= 1 ; TODO: use setting instead of hardcoded 1
-    return hasEnoughPlayers
+    hasEnoughPlayers := countInMatches >= this.config.minPlayersInMatches
+    shouldNotify := this.config.notifyOfMatches
+    return hasEnoughPlayers and shouldNotify
   }
 
   __isSoldat2WindowActive() {
@@ -301,7 +301,7 @@ main() {
   config := ConfigFile()
   count := CountData()
   myGui := GuiWindow(config)
-  notifier := ActivityNotifier()
+  notifier := ActivityNotifier(config)
   periodicCheck(count, myGui, notifier)
 }
 
