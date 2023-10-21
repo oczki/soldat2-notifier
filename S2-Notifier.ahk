@@ -212,7 +212,7 @@ class GuiWindow {
   }
 }
 
-class ConfigProxy { ; TODO: move clamp here instead of in ConfigFile
+class ConfigProxy {
   __New(configFile) {
     this.configFile := configFile
     this.__readFromFile()
@@ -231,6 +231,46 @@ class ConfigProxy { ; TODO: move clamp here instead of in ConfigFile
     this.configFile.minPlayersInMatches := this.minPlayersInMatches
   }
 
+  minutesBetweenChecks {
+    get => this.__clampMinutes(this.__minutesBetweenChecks)
+    set => this.__minutesBetweenChecks := this.__clampMinutes(value)
+  }
+
+  minutesBetweenNotifications {
+    get => this.__clampMinutes(this.__minutesBetweenNotifications)
+    set => this.__minutesBetweenNotifications := this.__clampMinutes(value)
+  }
+
+  notifyOfPubs {
+    get => this.__clampBoolean(this.__notifyOfPubs)
+    set => this.__notifyOfPubs := this.__clampBoolean(value)
+  }
+
+  notifyOfQueues {
+    get => this.__clampBoolean(this.__notifyOfQueues)
+    set => this.__notifyOfQueues := this.__clampBoolean(value)
+  }
+
+  notifyOfMatches {
+    get => this.__clampBoolean(this.__notifyOfMatches)
+    set => this.__notifyOfMatches := this.__clampBoolean(value)
+  }
+
+  minPlayersInPubs {
+    get => this.__clampPlayerCount(this.__minPlayersInPubs)
+    set => this.__minPlayersInPubs := this.__clampPlayerCount(value)
+  }
+
+  minPlayersInQueues {
+    get => this.__clampPlayerCount(this.__minPlayersInQueues)
+    set => this.__minPlayersInQueues := this.__clampPlayerCount(value)
+  }
+
+  minPlayersInMatches {
+    get => this.__clampPlayerCount(this.__minPlayersInMatches)
+    set => this.__minPlayersInMatches := this.__clampPlayerCount(value)
+  }
+
   __readFromFile() {
     this.minutesBetweenChecks := this.configFile.minutesBetweenChecks
     this.minutesBetweenNotifications := this.configFile.minutesBetweenNotifications
@@ -242,6 +282,28 @@ class ConfigProxy { ; TODO: move clamp here instead of in ConfigFile
     this.minPlayersInPubs := this.configFile.minPlayersInPubs
     this.minPlayersInQueues := this.configFile.minPlayersInQueues
     this.minPlayersInMatches := this.configFile.minPlayersInMatches
+  }
+
+  __clampBoolean(val) {
+    return this.__clamp(0, val, 1)
+  }
+
+  __clampMinutes(val) {
+    return this.__clamp(1, val, 60)
+  }
+
+  __clampPlayerCount(val) {
+    return this.__clamp(1, val, 10)
+  }
+
+  __clamp(valueMin, valueActual, valueMax) {
+    if (valueActual < valueMin) {
+      return valueMin
+    }
+    if (valueActual > valueMax) {
+      return valueMax
+    }
+    return valueActual
   }
 }
 
@@ -269,29 +331,17 @@ class ConfigFile {
   }
 
   minutesBetweenChecks {
-    get {
-      readValue := IniRead(this.__fileName,
-        this.__sectionGeneral, this.__keyMinutesBetweenChecks, 1)
-      return this.__clamp(1, readValue, 60)
-    }
-    set {
-      setValue := this.__clamp(1, value, 60)
-      IniWrite(value, this.__fileName,
-        this.__sectionGeneral, this.__keyMinutesBetweenChecks)
-    }
+    get => IniRead(this.__fileName,
+      this.__sectionGeneral, this.__keyMinutesBetweenChecks, 1)
+    set => IniWrite(value, this.__fileName,
+      this.__sectionGeneral, this.__keyMinutesBetweenChecks)
   }
 
   minutesBetweenNotifications {
-    get {
-      readValue := IniRead(this.__fileName,
-        this.__sectionGeneral, this.__keyMinutesBetweenNotifications, 1)
-      return this.__clamp(1, readValue, 60)
-    }
-    set {
-      setValue := this.__clamp(1, value, 60)
-      IniWrite(value, this.__fileName,
-        this.__sectionGeneral, this.__keyMinutesBetweenNotifications)
-    }
+    get => IniRead(this.__fileName,
+      this.__sectionGeneral, this.__keyMinutesBetweenNotifications, 1)
+    set => IniWrite(value, this.__fileName,
+      this.__sectionGeneral, this.__keyMinutesBetweenNotifications)
   }
 
   notifyOfPubs {
@@ -316,52 +366,24 @@ class ConfigFile {
   }
 
   minPlayersInPubs {
-    get {
-      readValue := IniRead(this.__fileName,
-        this.__sectionPub, this.__keyMinimumPlayers, 1)
-      return this.__clamp(1, readValue, 10)
-    }
-    set {
-      setValue := this.__clamp(1, value, 10)
-      IniWrite(value, this.__fileName,
-        this.__sectionPub, this.__keyMinimumPlayers)
-    }
+    get => IniRead(this.__fileName,
+      this.__sectionPub, this.__keyMinimumPlayers, 1)
+    set => IniWrite(value, this.__fileName,
+      this.__sectionPub, this.__keyMinimumPlayers)
   }
 
   minPlayersInQueues {
-    get {
-      readValue := IniRead(this.__fileName,
-        this.__sectionQueue, this.__keyMinimumPlayers, 1)
-      return this.__clamp(1, readValue, 10)
-    }
-    set {
-      setValue := this.__clamp(1, value, 10)
-      IniWrite(value, this.__fileName,
-        this.__sectionQueue, this.__keyMinimumPlayers)
-    }
+    get => IniRead(this.__fileName,
+      this.__sectionQueue, this.__keyMinimumPlayers, 1)
+    set => IniWrite(value, this.__fileName,
+      this.__sectionQueue, this.__keyMinimumPlayers)
   }
 
   minPlayersInMatches {
-    get {
-      readValue := IniRead(this.__fileName,
-        this.__sectionMatch, this.__keyMinimumPlayers, 1)
-      return this.__clamp(1, readValue, 10)
-    }
-    set {
-      setValue := this.__clamp(1, value, 10)
-      IniWrite(value, this.__fileName,
-        this.__sectionMatch, this.__keyMinimumPlayers)
-    }
-  }
-
-  __clamp(valueMin, valueActual, valueMax) {
-    if (valueActual < valueMin) {
-      return valueMin
-    }
-    if (valueActual > valueMax) {
-      return valueMax
-    }
-    return valueActual
+    get => IniRead(this.__fileName,
+      this.__sectionMatch, this.__keyMinimumPlayers, 1)
+    set => IniWrite(value, this.__fileName,
+      this.__sectionMatch, this.__keyMinimumPlayers)
   }
 
   __configDirectoryExists() {
@@ -379,6 +401,7 @@ class ConfigFile {
   __createConfigFile() {
     FileAppend('', this.__fileName)
 
+    this.minutesBetweenChecks := 1
     this.minutesBetweenNotifications := 10
 
     this.notifyOfPubs := false
