@@ -73,8 +73,8 @@ class SoundName {
 class ActivityNotifier {
   __New(config) {
     this.config := config
-    this.countdownTimer := 0 ; TODO: read from setting
-    this.countdownTimerMax := 10 ; TODO: read from setting
+    this.countdownTimer := 0
+    this.countdownTimerMax := config.minutesBetweenNotifications
   }
 
   update(count) {
@@ -87,6 +87,7 @@ class ActivityNotifier {
   }
 
   forceUpdate(count) {
+    this.countdownTimerMax := this.config.minutesBetweenNotifications
     this.__tickAndResetCountdown(count)
   }
 
@@ -159,7 +160,8 @@ class GuiWindow {
     this.myGui.Show('w600 h400')
   }
 
-  __exit() {
+  __exit(*) {
+    this.config.saveToFile()
     ExitApp()
   }
 
@@ -180,7 +182,7 @@ class GuiWindow {
 
   __create() {
     myGui := Gui(, 'S2 Notifier')
-    myGui.OnEvent('Close', this.__exit)
+    myGui.OnEvent('Close', this.__exit.Bind(this))
 
     myGui.Add('Text', 'v' . GuiName().counterPub . ' w150', '0')
     myGui.Add('Text', 'v' . GuiName().counterQueue . ' w150', '0')
@@ -210,7 +212,40 @@ class GuiWindow {
   }
 }
 
-class ConfigFile { ; TODO: have a proxy class so that these values aren't read from disk every minute
+class ConfigProxy { ; TODO: move clamp here instead of in ConfigFile
+  __New(configFile) {
+    this.configFile := configFile
+    this.__readFromFile()
+  }
+
+  saveToFile() {
+    this.configFile.minutesBetweenChecks := this.minutesBetweenChecks
+    this.configFile.minutesBetweenNotifications := this.minutesBetweenNotifications
+
+    this.configFile.notifyOfPubs := this.notifyOfPubs
+    this.configFile.notifyOfQueues := this.notifyOfQueues
+    this.configFile.notifyOfMatches := this.notifyOfMatches
+
+    this.configFile.minPlayersInPubs := this.minPlayersInPubs
+    this.configFile.minPlayersInQueues := this.minPlayersInQueues
+    this.configFile.minPlayersInMatches := this.minPlayersInMatches
+  }
+
+  __readFromFile() {
+    this.minutesBetweenChecks := this.configFile.minutesBetweenChecks
+    this.minutesBetweenNotifications := this.configFile.minutesBetweenNotifications
+
+    this.notifyOfPubs := this.configFile.notifyOfPubs
+    this.notifyOfQueues := this.configFile.notifyOfQueues
+    this.notifyOfMatches := this.configFile.notifyOfMatches
+
+    this.minPlayersInPubs := this.configFile.minPlayersInPubs
+    this.minPlayersInQueues := this.configFile.minPlayersInQueues
+    this.minPlayersInMatches := this.configFile.minPlayersInMatches
+  }
+}
+
+class ConfigFile {
   __New() {
     this.__fileDirectory := 'config'
     this.__fileName := this.__fileDirectory . '/config.ini'
@@ -356,15 +391,6 @@ class ConfigFile { ; TODO: have a proxy class so that these values aren't read f
   }
 }
 
-periodicCheck(count, myGui, notifier) {
-  count.update()
-  myGui.update(count)
-  notifier.update(count)
-
-  selfCall := periodicCheck.Bind(count, myGui, notifier)
-  SetTimer(selfCall, -60000) ; Run self every minute
-}
-
 class PeriodicUpdater {
   __New(config, count, myGui, notifier) {
     this.config := config
@@ -391,6 +417,7 @@ class PeriodicUpdater {
 
   __startTimer() {
     callback := this.__update.Bind(this)
+    ; Period is negative, so it'll only run once
     SetTimer(callback, -this.__getTimerPeriodMilliseconds())
   }
 
@@ -401,11 +428,14 @@ class PeriodicUpdater {
 }
 
 main() {
-  config := ConfigFile()
+  ; Proxy is used to reduce reads/writes; config file is written on exit
+  configFileActual := ConfigFile()
+  configFileProxy := ConfigProxy(configFileActual)
+
   count := CountData()
-  myGui := GuiWindow(config)
-  notifier := ActivityNotifier(config)
-  global updater := PeriodicUpdater(config, count, myGui, notifier)
+  myGui := GuiWindow(configFileProxy)
+  notifier := ActivityNotifier(configFileProxy)
+  global updater := PeriodicUpdater(configFileProxy, count, myGui, notifier)
   updater.update()
 }
 
