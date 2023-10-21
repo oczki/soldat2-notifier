@@ -161,26 +161,6 @@ class GuiWindow {
     this.myGui.Show('w600 h400')
   }
 
-  __exit(*) {
-    this.config.saveToFile()
-    ExitApp()
-  }
-
-  __checkboxPubChanged(*) {
-    checked := this.myGui[GuiName.checkboxPub].Value
-    this.config.notifyOfPubs := checked
-  }
-
-  __checkboxQueueChanged(*) {
-    checked := this.myGui[GuiName.checkboxQueue].Value
-    this.config.notifyOfQueues := checked
-  }
-
-  __checkboxMatchChanged(*) {
-    checked := this.myGui[GuiName.checkboxMatch].Value
-    this.config.notifyOfMatches := checked
-  }
-
   __create() {
     myGui := Gui(, 'S2 Notifier')
     myGui.OnEvent('Close', this.__exit.Bind(this))
@@ -204,29 +184,49 @@ class GuiWindow {
     return myGui
   }
 
+  __checkboxPubChanged(*) {
+    checked := this.myGui[GuiName.checkboxPub].Value
+    this.config.notifyOfPubs := checked
+  }
+
+  __checkboxQueueChanged(*) {
+    checked := this.myGui[GuiName.checkboxQueue].Value
+    this.config.notifyOfQueues := checked
+  }
+
+  __checkboxMatchChanged(*) {
+    checked := this.myGui[GuiName.checkboxMatch].Value
+    this.config.notifyOfMatches := checked
+  }
+
   __addCounter(myGui, controlName) {
     myGui.AddText('v' . controlName . ' w150', '0')
   }
 
   __addCheckboxPub(myGui) {
-    checkboxPub := myGui.AddCheckbox(
+    checkbox := myGui.AddCheckbox(
       'v' . GuiName.checkboxPub . ' Checked' . this.config.notifyOfPubs,
       'Notify about public servers')
-    checkboxPub.OnEvent('Click', this.__checkboxPubChanged.Bind(this))
+    checkbox.OnEvent('Click', this.__checkboxPubChanged.Bind(this))
   }
 
   __addCheckboxQueue(myGui) {
-    checkboxQueue := myGui.AddCheckbox(
+    checkbox := myGui.AddCheckbox(
       'v' . GuiName.checkboxQueue . ' Checked' . this.config.notifyOfQueues,
       'Notify about ranked queues')
-    checkboxQueue.OnEvent('Click', this.__checkboxQueueChanged.Bind(this))
+    checkbox.OnEvent('Click', this.__checkboxQueueChanged.Bind(this))
   }
 
   __addCheckboxMatch(myGui) {
-    checkboxMatch := myGui.AddCheckbox(
+    checkbox := myGui.AddCheckbox(
       'v' . GuiName.checkboxMatch . ' Checked' . this.config.notifyOfMatches,
       'Notify about ranked matches')
-    checkboxMatch.OnEvent('Click', this.__checkboxMatchChanged.Bind(this))
+    checkbox.OnEvent('Click', this.__checkboxMatchChanged.Bind(this))
+  }
+
+  __exit(*) {
+    this.config.saveToFile()
+    ExitApp()
   }
 }
 
@@ -235,11 +235,11 @@ class ConfigProxy {
     this.configFile := configFile
     this.__readFromFile()
   }
-
+  
   saveToFile() {
     this.configFile.minutesBetweenChecks := this.minutesBetweenChecks
     this.configFile.minutesBetweenNotifications := this.minutesBetweenNotifications
-
+    
     this.configFile.notifyOfPubs := this.notifyOfPubs
     this.configFile.notifyOfQueues := this.notifyOfQueues
     this.configFile.notifyOfMatches := this.notifyOfMatches
