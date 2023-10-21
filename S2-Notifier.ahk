@@ -287,10 +287,15 @@ class GuiWindow {
 class ConfigProxy {
   __New(configFile) {
     this.configFile := configFile
+    this.__hasChangesToSave := false
     this.__readFromFile()
   }
   
   saveToFile() {
+    if (not this.__hasChangesToSave) {
+      return
+    }
+
     this.configFile.minutesBetweenChecks := this.minutesBetweenChecks
     this.configFile.minutesBetweenNotifications := this.minutesBetweenNotifications
     
@@ -305,42 +310,66 @@ class ConfigProxy {
 
   minutesBetweenChecks {
     get => this.__clampMinutes(this.__minutesBetweenChecks)
-    set => this.__minutesBetweenChecks := this.__clampMinutes(value)
+    set {
+      this.__minutesBetweenChecks := this.__clampMinutes(value)
+      this.__hasChangesToSave := true
+    }
   }
 
   minutesBetweenNotifications {
     get => this.__clampMinutes(this.__minutesBetweenNotifications)
-    set => this.__minutesBetweenNotifications := this.__clampMinutes(value)
+    set {
+      this.__minutesBetweenNotifications := this.__clampMinutes(value)
+      this.__hasChangesToSave := true
+    }
   }
 
   notifyOfPubs {
     get => this.__clampBoolean(this.__notifyOfPubs)
-    set => this.__notifyOfPubs := this.__clampBoolean(value)
+    set {
+      this.__notifyOfPubs := this.__clampBoolean(value)
+      this.__hasChangesToSave := true
+    }
   }
 
   notifyOfQueues {
     get => this.__clampBoolean(this.__notifyOfQueues)
-    set => this.__notifyOfQueues := this.__clampBoolean(value)
+    set {
+      this.__notifyOfQueues := this.__clampBoolean(value)
+      this.__hasChangesToSave := true
+    }
   }
 
   notifyOfMatches {
     get => this.__clampBoolean(this.__notifyOfMatches)
-    set => this.__notifyOfMatches := this.__clampBoolean(value)
+    set {
+      this.__notifyOfMatches := this.__clampBoolean(value)
+      this.__hasChangesToSave := true
+    }
   }
 
   minPlayersInPubs {
     get => this.__clampPlayerCount(this.__minPlayersInPubs)
-    set => this.__minPlayersInPubs := this.__clampPlayerCount(value)
+    set {
+      this.__minPlayersInPubs := this.__clampPlayerCount(value)
+      this.__hasChangesToSave := true
+    }
   }
 
   minPlayersInQueues {
     get => this.__clampPlayerCount(this.__minPlayersInQueues)
-    set => this.__minPlayersInQueues := this.__clampPlayerCount(value)
+    set {
+      this.__minPlayersInQueues := this.__clampPlayerCount(value)
+      this.__hasChangesToSave := true
+    }
   }
 
   minPlayersInMatches {
     get => this.__clampPlayerCount(this.__minPlayersInMatches)
-    set => this.__minPlayersInMatches := this.__clampPlayerCount(value)
+    set {
+      this.__minPlayersInMatches := this.__clampPlayerCount(value)
+      this.__hasChangesToSave := true
+    }
   }
 
   __readFromFile() {
@@ -354,6 +383,8 @@ class ConfigProxy {
     this.minPlayersInPubs := this.configFile.minPlayersInPubs
     this.minPlayersInQueues := this.configFile.minPlayersInQueues
     this.minPlayersInMatches := this.configFile.minPlayersInMatches
+
+    this.__hasChangesToSave := false
   }
 
   __clampBoolean(val) {
