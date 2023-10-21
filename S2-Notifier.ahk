@@ -43,15 +43,13 @@ class CountData {
 }
 
 class GuiName {
-  __New() {
-    this.counterPub := 'counterPub'
-    this.counterQueue := 'counterQueue'
-    this.counterMatch := 'counterMatch'
+  static counterPub := 'counterPub'
+  static counterQueue := 'counterQueue'
+  static counterMatch := 'counterMatch'
 
-    this.checkboxPub := 'checkboxPubEnabled'
-    this.checkboxQueue := 'checkboxQueueEnabled'
-    this.checkboxMatch := 'checkboxMatchEnabled'
-  }
+  static checkboxPub := 'checkboxPubEnabled'
+  static checkboxQueue := 'checkboxQueueEnabled'
+  static checkboxMatch := 'checkboxMatchEnabled'
 }
 
 class SoundPlayer {
@@ -150,9 +148,9 @@ class GuiWindow {
   }
 
   update(count) {
-    this.myGui[GuiName().counterPub].Value := count.inPubs
-    this.myGui[GuiName().counterQueue].Value := count.inQueues
-    this.myGui[GuiName().counterMatch].Value := count.inMatches
+    this.myGui[GuiName.counterPub].Value := count.inPubs
+    this.myGui[GuiName.counterQueue].Value := count.inQueues
+    this.myGui[GuiName.counterMatch].Value := count.inMatches
   }
 
   forceUpdate() {
@@ -169,17 +167,17 @@ class GuiWindow {
   }
 
   __checkboxPubChanged(*) {
-    checked := this.myGui[GuiName().checkboxPub].Value
+    checked := this.myGui[GuiName.checkboxPub].Value
     this.config.notifyOfPubs := checked
   }
 
   __checkboxQueueChanged(*) {
-    checked := this.myGui[GuiName().checkboxQueue].Value
+    checked := this.myGui[GuiName.checkboxQueue].Value
     this.config.notifyOfQueues := checked
   }
 
   __checkboxMatchChanged(*) {
-    checked := this.myGui[GuiName().checkboxMatch].Value
+    checked := this.myGui[GuiName.checkboxMatch].Value
     this.config.notifyOfMatches := checked
   }
 
@@ -187,21 +185,13 @@ class GuiWindow {
     myGui := Gui(, 'S2 Notifier')
     myGui.OnEvent('Close', this.__exit.Bind(this))
 
-    myGui.Add('Text', 'v' . GuiName().counterPub . ' w150', '0')
-    myGui.Add('Text', 'v' . GuiName().counterQueue . ' w150', '0')
-    myGui.Add('Text', 'v' . GuiName().counterMatch . ' w150', '0')
-    checkboxPub := myGui.Add('Checkbox',
-      'v' . GuiName().checkboxPub . ' Checked' . this.config.notifyOfPubs,
-      'Notify about public servers')
-    checkboxPub.OnEvent('Click', this.__checkboxPubChanged.Bind(this))
-    checkboxQueue := myGui.Add('Checkbox',
-      'v' . GuiName().checkboxQueue . ' Checked' . this.config.notifyOfQueues,
-      'Notify about ranked queues')
-    checkboxQueue.OnEvent('Click', this.__checkboxQueueChanged.Bind(this))
-    checkboxMatch := myGui.Add('Checkbox',
-      'v' . GuiName().checkboxMatch . ' Checked' . this.config.notifyOfMatches,
-      'Notify about ranked matches')
-    checkboxMatch.OnEvent('Click', this.__checkboxMatchChanged.Bind(this))
+    this.__addCounter(myGui, GuiName.counterPub)
+    this.__addCounter(myGui, GuiName.counterQueue)
+    this.__addCounter(myGui, GuiName.counterMatch)
+
+    this.__addCheckboxPub(myGui)
+    this.__addCheckboxQueue(myGui)
+    this.__addCheckboxMatch(myGui)
 
     ; dnd hours
     ; mute when s2 window is active
@@ -212,6 +202,31 @@ class GuiWindow {
     ; countdown to notif unmute
 
     return myGui
+  }
+
+  __addCounter(myGui, controlName) {
+    myGui.AddText('v' . controlName . ' w150', '0')
+  }
+
+  __addCheckboxPub(myGui) {
+    checkboxPub := myGui.AddCheckbox(
+      'v' . GuiName.checkboxPub . ' Checked' . this.config.notifyOfPubs,
+      'Notify about public servers')
+    checkboxPub.OnEvent('Click', this.__checkboxPubChanged.Bind(this))
+  }
+
+  __addCheckboxQueue(myGui) {
+    checkboxQueue := myGui.AddCheckbox(
+      'v' . GuiName.checkboxQueue . ' Checked' . this.config.notifyOfQueues,
+      'Notify about ranked queues')
+    checkboxQueue.OnEvent('Click', this.__checkboxQueueChanged.Bind(this))
+  }
+
+  __addCheckboxMatch(myGui) {
+    checkboxMatch := myGui.AddCheckbox(
+      'v' . GuiName.checkboxMatch . ' Checked' . this.config.notifyOfMatches,
+      'Notify about ranked matches')
+    checkboxMatch.OnEvent('Click', this.__checkboxMatchChanged.Bind(this))
   }
 }
 
