@@ -82,11 +82,19 @@ class ActivityNotifier {
       this.countdownTimer--
     }
     if (this.countdownTimer <= 0 and not this.__isSoldat2WindowActive()) {
-      this.countdownTimer := this.countdownTimerMax
-      this.__tickForMatches(count.inMatches)
-      this.__tickForQueues(count.inQueues)
-      this.__tickForPubs(count.inPubs)
+      this.__tickAndResetCountdown(count)
     }
+  }
+
+  forceUpdate(count) {
+    this.__tickAndResetCountdown(count)
+  }
+
+  __tickAndResetCountdown(count) {
+    this.countdownTimer := this.countdownTimerMax
+    this.__tickForMatches(count.inMatches)
+    this.__tickForQueues(count.inQueues)
+    this.__tickForPubs(count.inPubs)
   }
 
   __tickForPubs(countInPubs) {
@@ -143,6 +151,10 @@ class GuiWindow {
     this.myGui[GuiName().counterMatch].Value := count.inMatches
   }
 
+  forceUpdate() {
+    updater.update()
+  }
+
   show() {
     this.myGui.Show('w600 h400')
   }
@@ -175,22 +187,30 @@ class GuiWindow {
     myGui.Add('Text', 'v' . GuiName().counterMatch . ' w150', '0')
     checkboxPub := myGui.Add('Checkbox',
       'v' . GuiName().checkboxPub . ' Checked' . this.config.notifyOfPubs,
-      'Notify of activity in public servers')
+      'Notify about public servers')
     checkboxPub.OnEvent('Click', this.__checkboxPubChanged.Bind(this))
     checkboxQueue := myGui.Add('Checkbox',
       'v' . GuiName().checkboxQueue . ' Checked' . this.config.notifyOfQueues,
-      'Notify of activity in ranked queues')
+      'Notify about ranked queues')
     checkboxQueue.OnEvent('Click', this.__checkboxQueueChanged.Bind(this))
     checkboxMatch := myGui.Add('Checkbox',
       'v' . GuiName().checkboxMatch . ' Checked' . this.config.notifyOfMatches,
-      'Notify of activity in ranked matches')
+      'Notify about ranked matches')
     checkboxMatch.OnEvent('Click', this.__checkboxMatchChanged.Bind(this))
+
+    ; dnd hours
+    ; mute when s2 window is active
+    ; refresh now
+    ; input spinner player thresholds
+    ; preview sound
+    ; countdown to next check
+    ; countdown to notif unmute
 
     return myGui
   }
 }
 
-class ConfigFile {
+class ConfigFile { ; TODO: have a proxy class so that these values aren't read from disk every minute
   __New() {
     this.__fileDirectory := 'config'
     this.__fileName := this.__fileDirectory . '/config.ini'
@@ -200,6 +220,7 @@ class ConfigFile {
     this.__sectionQueue := 'RankedQueues'
     this.__sectionMatch := 'RankedMatches'
 
+    this.__keyMinutesBetweenChecks := 'MinutesBetweenChecks'
     this.__keyMinutesBetweenNotifications := 'MinutesBetweenNotifications'
     this.__keyFeatureEnabled := 'EnableNotifications'
     this.__keyMinimumPlayers := 'MinimumPlayersToNotify'
@@ -212,11 +233,30 @@ class ConfigFile {
     }
   }
 
+  minutesBetweenChecks {
+    get {
+      readValue := IniRead(this.__fileName,
+        this.__sectionGeneral, this.__keyMinutesBetweenChecks, 1)
+      return this.__clamp(1, readValue, 60)
+    }
+    set {
+      setValue := this.__clamp(1, value, 60)
+      IniWrite(value, this.__fileName,
+        this.__sectionGeneral, this.__keyMinutesBetweenChecks)
+    }
+  }
+
   minutesBetweenNotifications {
-    get => IniRead(this.__fileName,
-      this.__sectionGeneral, this.__keyMinutesBetweenNotifications, 10)
-    set => IniWrite(value, this.__fileName,
-      this.__sectionGeneral, this.__keyMinutesBetweenNotifications)
+    get {
+      readValue := IniRead(this.__fileName,
+        this.__sectionGeneral, this.__keyMinutesBetweenNotifications, 1)
+      return this.__clamp(1, readValue, 60)
+    }
+    set {
+      setValue := this.__clamp(1, value, 60)
+      IniWrite(value, this.__fileName,
+        this.__sectionGeneral, this.__keyMinutesBetweenNotifications)
+    }
   }
 
   notifyOfPubs {
@@ -241,24 +281,52 @@ class ConfigFile {
   }
 
   minPlayersInPubs {
-    get => IniRead(this.__fileName,
-      this.__sectionPub, this.__keyMinimumPlayers, 1)
-    set => IniWrite(value, this.__fileName,
-      this.__sectionPub, this.__keyMinimumPlayers)
+    get {
+      readValue := IniRead(this.__fileName,
+        this.__sectionPub, this.__keyMinimumPlayers, 1)
+      return this.__clamp(1, readValue, 10)
+    }
+    set {
+      setValue := this.__clamp(1, value, 10)
+      IniWrite(value, this.__fileName,
+        this.__sectionPub, this.__keyMinimumPlayers)
+    }
   }
 
   minPlayersInQueues {
-    get => IniRead(this.__fileName,
-      this.__sectionQueue, this.__keyMinimumPlayers, 1)
-    set => IniWrite(value, this.__fileName,
-      this.__sectionQueue, this.__keyMinimumPlayers)
+    get {
+      readValue := IniRead(this.__fileName,
+        this.__sectionQueue, this.__keyMinimumPlayers, 1)
+      return this.__clamp(1, readValue, 10)
+    }
+    set {
+      setValue := this.__clamp(1, value, 10)
+      IniWrite(value, this.__fileName,
+        this.__sectionQueue, this.__keyMinimumPlayers)
+    }
   }
 
   minPlayersInMatches {
-    get => IniRead(this.__fileName,
-      this.__sectionMatch, this.__keyMinimumPlayers, 1)
-    set => IniWrite(value, this.__fileName,
-      this.__sectionMatch, this.__keyMinimumPlayers)
+    get {
+      readValue := IniRead(this.__fileName,
+        this.__sectionMatch, this.__keyMinimumPlayers, 1)
+      return this.__clamp(1, readValue, 10)
+    }
+    set {
+      setValue := this.__clamp(1, value, 10)
+      IniWrite(value, this.__fileName,
+        this.__sectionMatch, this.__keyMinimumPlayers)
+    }
+  }
+
+  __clamp(valueMin, valueActual, valueMax) {
+    if (valueActual < valueMin) {
+      return valueMin
+    }
+    if (valueActual > valueMax) {
+      return valueMax
+    }
+    return valueActual
   }
 
   __configDirectoryExists() {
@@ -297,12 +365,49 @@ periodicCheck(count, myGui, notifier) {
   SetTimer(selfCall, -60000) ; Run self every minute
 }
 
+class PeriodicUpdater {
+  __New(config, count, myGui, notifier) {
+    this.config := config
+    this.count := count
+    this.myGui := myGui
+    this.notifier := notifier
+  }
+
+  update() {
+    this.__update()
+  }
+
+  __update() {
+    this.count.update()
+    this.myGui.update(this.count)
+    this.notifier.update(this.count)
+    this.__startTimer()
+  }
+
+  __getTimerPeriodMilliseconds() {
+    minutes := this.config.minutesBetweenChecks
+    return minutes * 60000
+  }
+
+  __startTimer() {
+    callback := this.__update.Bind(this)
+    SetTimer(callback, -this.__getTimerPeriodMilliseconds())
+  }
+
+  __deleteTimer() {
+    callback := this.__update.Bind(this)
+    SetTimer(callback, 0)
+  }
+}
+
 main() {
   config := ConfigFile()
   count := CountData()
   myGui := GuiWindow(config)
   notifier := ActivityNotifier(config)
-  periodicCheck(count, myGui, notifier)
+  global updater := PeriodicUpdater(config, count, myGui, notifier)
+  updater.update()
 }
 
+updater := 0
 main()
