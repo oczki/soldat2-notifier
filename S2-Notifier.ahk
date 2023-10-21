@@ -54,19 +54,22 @@ class GuiName {
   }
 }
 
-class SoundName {
-  __New() {
-    this.names := [
-      'beeps',
-      'bells',
-      'movie',
-      'retro',
-      'success'
-    ]
+class SoundPlayer {
+  static playPubSound() {
+    this.__play('pub')
   }
 
-  get(index) {
-    return 'sfx/' . this.names[index] . '.wav'
+  static playQueueSound() {
+    this.__play('queue')
+  }
+
+  static playMatchSound() {
+    this.__play('match')
+  }
+
+  static __play(soundName) {
+    waitForSoundToFinish := true
+    SoundPlay('sfx/' . soundName . '.wav', waitForSoundToFinish)
   }
 }
 
@@ -100,19 +103,19 @@ class ActivityNotifier {
 
   __tickForPubs(countInPubs) {
     if (this.__shouldNotifyForPubs(countInPubs)) {
-      SoundPlay(SoundName().get(1), true) ; TODO: extract to allow previewing
+      SoundPlayer.playPubSound()
     }
   }
 
   __tickForQueues(countInQueues) {
     if (this.__shouldNotifyForQueues(countInQueues)) {
-      SoundPlay(SoundName().get(4), true) ; TODO: extract to allow previewing
+      SoundPlayer.playQueueSound()
     }
   }
 
   __tickForMatches(countInMatches) {
     if (this.__shouldNotifyForMatches(countInMatches)) {
-      SoundPlay(SoundName().get(5), true) ; TODO: extract to allow previewing
+      SoundPlayer.playMatchSound()
     }
   }
 
