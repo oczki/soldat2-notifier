@@ -17,7 +17,7 @@ class CountData {
   }
 
   __getJson() {
-    url := 'https://oczki.pl/s2-players/data/api/player-count.php'
+    url := 'https://oczki.pl/s2-players/data/api/player-count.php' ; TODO: maybe modify it so it's not easily scrapped and ddosed by github crawlers
     request := ComObject('WinHttp.WinHttpRequest.5.1')
     request.open('GET', url, false)
     request.setRequestHeader('Accept', 'application/json')
@@ -50,6 +50,10 @@ class GuiName {
   static checkboxPub := 'checkboxPubEnabled'
   static checkboxQueue := 'checkboxQueueEnabled'
   static checkboxMatch := 'checkboxMatchEnabled'
+
+  static spinnerPub := 'spinnerPub'
+  static spinnerQueue := 'spinnerQueue'
+  static spinnerMatch := 'spinnerMatch'
 }
 
 class SoundPlayer {
@@ -173,6 +177,9 @@ class GuiWindow {
     this.__addCheckboxQueue(myGui)
     this.__addCheckboxMatch(myGui)
 
+    this.__addMinPlayerSpinnerPub(myGui)
+    this.__addMinPlayerSpinnerQueue(myGui)
+    this.__addMinPlayerSpinnerMatch(myGui)
     ; dnd hours
     ; mute when s2 window is active
     ; refresh now
@@ -180,8 +187,59 @@ class GuiWindow {
     ; preview sound
     ; countdown to next check
     ; countdown to notif unmute
+    ; flash taskbar button (myGui.Flash())
 
     return myGui
+  }
+
+  __addCounter(myGui, controlName) {
+    myGui.AddText('v' . controlName . ' w150', '0')
+  }
+
+  __spinnerPubChanged(*) {
+    minPlayers := this.myGui[GuiName.spinnerPub].Value
+    this.config.minPlayersInPubs := minPlayers
+  }
+
+  __spinnerQueueChanged(*) {
+    minPlayers := this.myGui[GuiName.spinnerQueue].Value
+    this.config.minPlayersInQueues := minPlayers
+  }
+
+  __spinnerMatchChanged(*) {
+    minPlayers := this.myGui[GuiName.spinnerMatch].Value
+    this.config.minPlayersInMatches := minPlayers
+  }
+
+  __addMinPlayersText(myGui) {
+    myGui.AddText('w50 h30', '')
+  }
+
+  __addMinPlayersSpinner(myGui, spinnerName, initialValue) {
+    return myGui.AddUpDown(
+      'v' . spinnerName . ' Range1-10',
+      initialValue)
+  }
+
+  __addMinPlayerSpinnerPub(myGui) {
+    this.__addMinPlayersText(myGui)
+    spinner := this.__addMinPlayersSpinner(
+      myGui, GuiName.spinnerPub, this.config.minPlayersInPubs)
+    spinner.OnEvent('Change', this.__spinnerPubChanged.Bind(this))
+  }
+
+  __addMinPlayerSpinnerQueue(myGui) {
+    this.__addMinPlayersText(myGui)
+    spinner := this.__addMinPlayersSpinner(
+      myGui, GuiName.spinnerQueue, this.config.minPlayersInQueues)
+    spinner.OnEvent('Change', this.__spinnerQueueChanged.Bind(this))
+  }
+
+  __addMinPlayerSpinnerMatch(myGui) {
+    this.__addMinPlayersText(myGui)
+    spinner := this.__addMinPlayersSpinner(
+      myGui, GuiName.spinnerMatch, this.config.minPlayersInMatches)
+    spinner.OnEvent('Change', this.__spinnerMatchChanged.Bind(this))
   }
 
   __checkboxPubChanged(*) {
@@ -197,10 +255,6 @@ class GuiWindow {
   __checkboxMatchChanged(*) {
     checked := this.myGui[GuiName.checkboxMatch].Value
     this.config.notifyOfMatches := checked
-  }
-
-  __addCounter(myGui, controlName) {
-    myGui.AddText('v' . controlName . ' w150', '0')
   }
 
   __addCheckboxPub(myGui) {
