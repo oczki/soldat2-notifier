@@ -200,7 +200,7 @@ class GuiWindow {
 
   __addGroup(myGui, groupName) {
     myGui.SetFont('s14 w500')
-    myGui.AddGroupBox('w500 h120 xm', groupName)
+    myGui.AddGroupBox('w400 h120 xm', groupName)
     myGui.SetFont()
   }
 
