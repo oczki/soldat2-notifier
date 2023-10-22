@@ -211,8 +211,8 @@ class GuiWindow {
     this.config.minPlayersInMatches := minPlayers
   }
 
-  __addMinPlayersText(myGui) {
-    myGui.AddText('w50 h30', '')
+  __addMinPlayersEdit(myGui) {
+    return myGui.AddEdit('w50 h30 -VScroll', '')
   }
 
   __addMinPlayersSpinner(myGui, spinnerName, initialValue) {
@@ -222,21 +222,24 @@ class GuiWindow {
   }
 
   __addMinPlayerSpinnerPub(myGui) {
-    this.__addMinPlayersText(myGui)
+    edit := this.__addMinPlayersEdit(myGui)
+    edit.OnEvent('Change', this.__spinnerPubChanged.Bind(this))
     spinner := this.__addMinPlayersSpinner(
       myGui, GuiName.spinnerPub, this.config.minPlayersInPubs)
     spinner.OnEvent('Change', this.__spinnerPubChanged.Bind(this))
   }
 
   __addMinPlayerSpinnerQueue(myGui) {
-    this.__addMinPlayersText(myGui)
+    edit := this.__addMinPlayersEdit(myGui)
+    edit.OnEvent('Change', this.__spinnerQueueChanged.Bind(this))
     spinner := this.__addMinPlayersSpinner(
       myGui, GuiName.spinnerQueue, this.config.minPlayersInQueues)
     spinner.OnEvent('Change', this.__spinnerQueueChanged.Bind(this))
   }
 
   __addMinPlayerSpinnerMatch(myGui) {
-    this.__addMinPlayersText(myGui)
+    edit := this.__addMinPlayersEdit(myGui)
+    edit.OnEvent('Change', this.__spinnerMatchChanged.Bind(this))
     spinner := this.__addMinPlayersSpinner(
       myGui, GuiName.spinnerMatch, this.config.minPlayersInMatches)
     spinner.OnEvent('Change', this.__spinnerMatchChanged.Bind(this))
