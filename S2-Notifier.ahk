@@ -162,24 +162,28 @@ class GuiWindow {
   }
 
   show() {
-    this.myGui.Show('w600 h400')
+    this.myGui.Show()
   }
 
   __create() {
     myGui := Gui(, 'S2 Notifier')
     myGui.OnEvent('Close', this.__exit.Bind(this))
 
+    this.__addGroup(myGui, 'Public servers')
     this.__addCounter(myGui, GuiName.counterPub)
-    this.__addCounter(myGui, GuiName.counterQueue)
-    this.__addCounter(myGui, GuiName.counterMatch)
-
     this.__addCheckboxPub(myGui)
-    this.__addCheckboxQueue(myGui)
-    this.__addCheckboxMatch(myGui)
+    this.__addMinPlayersSpinnerPub(myGui)
 
-    this.__addMinPlayerSpinnerPub(myGui)
-    this.__addMinPlayerSpinnerQueue(myGui)
-    this.__addMinPlayerSpinnerMatch(myGui)
+    this.__addGroup(myGui, 'Queues')
+    this.__addCounter(myGui, GuiName.counterQueue)
+    this.__addCheckboxQueue(myGui)
+    this.__addMinPlayersSpinnerQueue(myGui)
+
+    this.__addGroup(myGui, 'Matches')
+    this.__addCounter(myGui, GuiName.counterMatch)
+    this.__addCheckboxMatch(myGui)
+    this.__addMinPlayersSpinnerMatch(myGui)
+
     ; dnd hours
     ; mute when s2 window is active
     ; refresh now
@@ -188,12 +192,21 @@ class GuiWindow {
     ; countdown to next check
     ; countdown to notif unmute
     ; flash taskbar button (myGui.Flash())
+    ; handle no response from server
 
     return myGui
   }
 
+  __addGroup(myGui, groupName) {
+    myGui.SetFont('s14 w500')
+    myGui.AddGroupBox('w500 h120 xm', groupName)
+    myGui.SetFont()
+  }
+
   __addCounter(myGui, controlName) {
-    myGui.AddText('v' . controlName . ' w150', '0')
+    myGui.SetFont('s36 w700')
+    myGui.AddText('v' . controlName . ' w60 Center xp32 yp40 -Wrap', '?')
+    myGui.SetFont()
   }
 
   __spinnerPubChanged(*) {
@@ -211,8 +224,23 @@ class GuiWindow {
     this.config.minPlayersInMatches := minPlayers
   }
 
+  __addMinPlayersPrefix(myGui) {
+    myGui.SetFont('s14')
+    myGui.AddText('xp y+12', 'when')
+    myGui.SetFont()
+  }
+
+  __addMinPlayersSuffix(myGui) {
+    myGui.SetFont('s14')
+    myGui.AddText('x+10 yp+2', 'or more players')
+    myGui.SetFont()
+  }
+
   __addMinPlayersEdit(myGui) {
-    return myGui.AddEdit('w50 h30 -VScroll', '')
+    myGui.SetFont('s14')
+    edit := myGui.AddEdit('w60 h32 -VScroll x+10 yp-2', '')
+    myGui.SetFont()
+    return edit
   }
 
   __addMinPlayersSpinner(myGui, spinnerName, initialValue) {
@@ -221,28 +249,34 @@ class GuiWindow {
       initialValue)
   }
 
-  __addMinPlayerSpinnerPub(myGui) {
+  __addMinPlayersSpinnerPub(myGui) {
+    this.__addMinPlayersPrefix(myGui)
     edit := this.__addMinPlayersEdit(myGui)
     edit.OnEvent('Change', this.__spinnerPubChanged.Bind(this))
     spinner := this.__addMinPlayersSpinner(
       myGui, GuiName.spinnerPub, this.config.minPlayersInPubs)
     spinner.OnEvent('Change', this.__spinnerPubChanged.Bind(this))
+    this.__addMinPlayersSuffix(myGui)
   }
 
-  __addMinPlayerSpinnerQueue(myGui) {
+  __addMinPlayersSpinnerQueue(myGui) {
+    this.__addMinPlayersPrefix(myGui)
     edit := this.__addMinPlayersEdit(myGui)
     edit.OnEvent('Change', this.__spinnerQueueChanged.Bind(this))
     spinner := this.__addMinPlayersSpinner(
       myGui, GuiName.spinnerQueue, this.config.minPlayersInQueues)
     spinner.OnEvent('Change', this.__spinnerQueueChanged.Bind(this))
+    this.__addMinPlayersSuffix(myGui)
   }
 
-  __addMinPlayerSpinnerMatch(myGui) {
+  __addMinPlayersSpinnerMatch(myGui) {
+    this.__addMinPlayersPrefix(myGui)
     edit := this.__addMinPlayersEdit(myGui)
     edit.OnEvent('Change', this.__spinnerMatchChanged.Bind(this))
     spinner := this.__addMinPlayersSpinner(
       myGui, GuiName.spinnerMatch, this.config.minPlayersInMatches)
     spinner.OnEvent('Change', this.__spinnerMatchChanged.Bind(this))
+    this.__addMinPlayersSuffix(myGui)
   }
 
   __checkboxPubChanged(*) {
@@ -260,25 +294,28 @@ class GuiWindow {
     this.config.notifyOfMatches := checked
   }
 
-  __addCheckboxPub(myGui) {
+  __addNotifyCheckbox(myGui, controlName, configOption, callback) {
+    myGui.SetFont('s14')
     checkbox := myGui.AddCheckbox(
-      'v' . GuiName.checkboxPub . ' Checked' . this.config.notifyOfPubs,
-      'Notify about public servers')
-    checkbox.OnEvent('Click', this.__checkboxPubChanged.Bind(this))
+      'v' . controlName . ' x+20 yp-6 Checked' . configOption,
+      'Enable notification')
+    checkbox.OnEvent('Click', callback.Bind(this))
+    myGui.SetFont()
+  }
+
+  __addCheckboxPub(myGui) {
+    this.__addNotifyCheckbox(myGui, GuiName.checkboxPub,
+      this.config.notifyOfPubs, this.__checkboxPubChanged)
   }
 
   __addCheckboxQueue(myGui) {
-    checkbox := myGui.AddCheckbox(
-      'v' . GuiName.checkboxQueue . ' Checked' . this.config.notifyOfQueues,
-      'Notify about ranked queues')
-    checkbox.OnEvent('Click', this.__checkboxQueueChanged.Bind(this))
+    this.__addNotifyCheckbox(myGui, GuiName.checkboxQueue,
+      this.config.notifyOfQueues, this.__checkboxQueueChanged)
   }
 
   __addCheckboxMatch(myGui) {
-    checkbox := myGui.AddCheckbox(
-      'v' . GuiName.checkboxMatch . ' Checked' . this.config.notifyOfMatches,
-      'Notify about ranked matches')
-    checkbox.OnEvent('Click', this.__checkboxMatchChanged.Bind(this))
+    this.__addNotifyCheckbox(myGui, GuiName.checkboxMatch,
+      this.config.notifyOfMatches, this.__checkboxMatchChanged)
   }
 
   __exit(*) {
