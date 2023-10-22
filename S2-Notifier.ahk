@@ -168,6 +168,7 @@ class GuiWindow {
   __create() {
     myGui := Gui(, 'S2 Notifier')
     myGui.OnEvent('Close', this.__exit.Bind(this))
+    TraySetIcon('media/bell.ico')
 
     this.__addGroup(myGui, 'Public servers')
     this.__addCounter(myGui, GuiName.counterPub)
