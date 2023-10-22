@@ -71,7 +71,7 @@ class SoundPlayer {
 
   static __play(soundName) {
     waitForSoundToFinish := true
-    SoundPlay('sfx/' . soundName . '.wav', waitForSoundToFinish)
+    SoundPlay('media/' . soundName . '.wav', waitForSoundToFinish)
   }
 }
 
