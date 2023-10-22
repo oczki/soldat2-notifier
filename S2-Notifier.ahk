@@ -2,6 +2,16 @@
 #SingleInstance Force
 Persistent
 
+; TODO
+; - Input: DND hours
+; - Checkbox: Mute when s2 window is active
+; - Button: Refresh now, resetting all countdowns
+; - Button: Preview sound
+; - Text: Countdown to next check
+; - Text: Countdown to notif unmute
+; - Flash taskbar button (myGui.Flash())
+; - CountData: Handle no response from server
+
 class CountData {
   __New() {
     this.inPubs := 0
@@ -16,10 +26,18 @@ class CountData {
     this.inMatches := this.__parseCountInRankedMatches(json)
   }
 
+  __getUrl() {
+    ; Poor man's attempt to hide stuff from basic robots
+    val := 'httqi.pl'
+    val := RegExReplace(val, 'q', 'ps://oczk')
+    val := val . '/s2-plqyers/dqtq/qpi/plqyer-count.php'
+    val := RegExReplace(val, 'q', 'a')
+    return val
+  }
+
   __getJson() {
-    url := 'https://oczki.pl/s2-players/data/api/player-count.php' ; TODO: maybe modify it so it's not easily scrapped and ddosed by github crawlers
     request := ComObject('WinHttp.WinHttpRequest.5.1')
-    request.open('GET', url, false)
+    request.open('GET', this.__getUrl(), false)
     request.setRequestHeader('Accept', 'application/json')
     request.send()
     request.waitForResponse()
@@ -184,16 +202,6 @@ class GuiWindow {
     this.__addCounter(myGui, GuiName.counterMatch)
     this.__addCheckboxMatch(myGui)
     this.__addMinPlayersSpinnerMatch(myGui)
-
-    ; dnd hours
-    ; mute when s2 window is active
-    ; refresh now
-    ; input spinner player thresholds
-    ; preview sound
-    ; countdown to next check
-    ; countdown to notif unmute
-    ; flash taskbar button (myGui.Flash())
-    ; handle no response from server
 
     return myGui
   }
