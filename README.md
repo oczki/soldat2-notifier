@@ -4,7 +4,8 @@ AutoHotkey v2 script that notifies you of activity in Soldat 2 public servers, r
 
 Each category is configurable independently. You can set the minimum number of players to trigger the alert. Alerts don't play if Soldat 2's window is active.
 
-![S2 Notifier window](https://github.com/oczki/soldat2-notifier/assets/2924029/a1756232-6e6e-441d-a1d9-d4d31e2062b7)
+![S2 Notifier window](https://github.com/oczki/soldat2-notifier/assets/2924029/a8e60442-3115-43ee-b448-b6f3569d76be)
+
 
 
 ## Installation
