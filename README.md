@@ -1,3 +1,6 @@
+> [!NOTE]
+> As [Soldat 2 has officially reached end of development](https://store.steampowered.com/news/app/474220/view/4656249009454303927?l=english), this repository is archived and will no longer be maintained.
+
 # S2 Notifier
 
 AutoHotkey v2 script that notifies you of activity in Soldat 2 public servers, ranked queues, and ranked matches.
